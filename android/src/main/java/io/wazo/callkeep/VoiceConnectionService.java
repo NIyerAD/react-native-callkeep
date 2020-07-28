@@ -26,13 +26,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.speech.tts.Voice;
-import android.support.annotation.Nullable;
-import android.support.v4.content.LocalBroadcastManager;
+import androidx.annotation.Nullable;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.telecom.CallAudioState;
 import android.telecom.Connection;
 import android.telecom.ConnectionRequest;
 import android.telecom.ConnectionService;
 import android.telecom.DisconnectCause;
+import android.telecom.PhoneAccount;
 import android.telecom.PhoneAccountHandle;
 import android.telecom.TelecomManager;
 import android.util.Log;
@@ -41,6 +42,8 @@ import android.app.ActivityManager;
 import android.app.ActivityManager.RunningTaskInfo;
 
 import com.facebook.react.HeadlessJsTaskService;
+import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.common.LifecycleState;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -51,13 +54,21 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static io.wazo.callkeep.Constants.ACTION_ANSWER_CALL;
 import static io.wazo.callkeep.Constants.ACTION_AUDIO_SESSION;
+import static io.wazo.callkeep.Constants.ACTION_DTMF_TONE;
+import static io.wazo.callkeep.Constants.ACTION_END_CALL;
+import static io.wazo.callkeep.Constants.ACTION_HOLD_CALL;
+import static io.wazo.callkeep.Constants.ACTION_MUTE_CALL;
 import static io.wazo.callkeep.Constants.ACTION_ONGOING_CALL;
+import static io.wazo.callkeep.Constants.ACTION_UNHOLD_CALL;
+import static io.wazo.callkeep.Constants.ACTION_UNMUTE_CALL;
 import static io.wazo.callkeep.Constants.ACTION_CHECK_REACHABILITY;
 import static io.wazo.callkeep.Constants.ACTION_WAKE_APP;
 import static io.wazo.callkeep.Constants.EXTRA_CALLER_NAME;
 import static io.wazo.callkeep.Constants.EXTRA_CALL_NUMBER;
 import static io.wazo.callkeep.Constants.EXTRA_CALL_UUID;
+import static io.wazo.callkeep.RNCallKeepModule.handle;
 
 // @see https://github.com/kbagchiGWC/voice-quickstart-android/blob/9a2aff7fbe0d0a5ae9457b48e9ad408740dfb968/exampleConnectionService/src/main/java/com/twilio/voice/examples/connectionservice/VoiceConnectionService.java
 @TargetApi(Build.VERSION_CODES.M)
@@ -82,7 +93,6 @@ public class VoiceConnectionService extends ConnectionService {
 
     public VoiceConnectionService() {
         super();
-        Log.e(TAG, "Constructor");
         isReachable = false;
         isInitialized = false;
         isAvailable = false;
@@ -244,6 +254,22 @@ public class VoiceConnectionService extends ConnectionService {
         extrasMap.put(EXTRA_CALL_NUMBER, request.getAddress().toString());
         VoiceConnection connection = new VoiceConnection(this, extrasMap);
         connection.setConnectionCapabilities(Connection.CAPABILITY_MUTE | Connection.CAPABILITY_SUPPORT_HOLD);
+
+				if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+						Context context = getApplicationContext();
+						TelecomManager telecomManager = (TelecomManager) context.getSystemService(context.TELECOM_SERVICE);
+						PhoneAccount phoneAccount = telecomManager.getPhoneAccount(request.getAccountHandle());
+
+						//If the phone account is self managed, then this connection must also be self managed.
+						if((phoneAccount.getCapabilities() & PhoneAccount.CAPABILITY_SELF_MANAGED) == PhoneAccount.CAPABILITY_SELF_MANAGED) {
+							Log.d(TAG, "PhoneAccount is SELF_MANAGED, so connection will be too");
+							connection.setConnectionProperties(Connection.PROPERTY_SELF_MANAGED);
+						}
+						else {
+						Log.d(TAG, "PhoneAccount is not SELF_MANAGED, so connection won't be either");
+						}
+				}
+
         connection.setInitializing();
         connection.setExtras(extras);
         currentConnections.put(extras.getString(EXTRA_CALL_UUID), connection);

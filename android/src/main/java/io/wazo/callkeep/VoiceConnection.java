@@ -23,8 +23,8 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.Nullable;
-import android.support.v4.content.LocalBroadcastManager;
+import androidx.annotation.Nullable;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.telecom.CallAudioState;
 import android.telecom.Connection;
 import android.telecom.DisconnectCause;
@@ -45,6 +45,7 @@ import static io.wazo.callkeep.Constants.ACTION_HOLD_CALL;
 import static io.wazo.callkeep.Constants.ACTION_MUTE_CALL;
 import static io.wazo.callkeep.Constants.ACTION_UNHOLD_CALL;
 import static io.wazo.callkeep.Constants.ACTION_UNMUTE_CALL;
+import static io.wazo.callkeep.Constants.ACTION_SHOW_INCOMING_CALL_UI;
 import static io.wazo.callkeep.Constants.EXTRA_CALLER_NAME;
 import static io.wazo.callkeep.Constants.EXTRA_CALL_NUMBER;
 import static io.wazo.callkeep.Constants.EXTRA_CALL_UUID;
@@ -195,6 +196,12 @@ public class VoiceConnection extends Connection {
         }
         destroy();
     }
+
+		@Override
+		public void onShowIncomingCallUi() {
+				Log.d(TAG, "onShowIncomingCallUi()");
+				sendCallRequestToActivity(ACTION_SHOW_INCOMING_CALL_UI, handle);
+		}
 
     /*
      * Send call request to the RNCallKeepModule
