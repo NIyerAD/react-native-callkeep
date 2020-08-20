@@ -72,6 +72,7 @@ import static androidx.core.app.ActivityCompat.requestPermissions;
 import static io.wazo.callkeep.Constants.EXTRA_CALLER_NAME;
 import static io.wazo.callkeep.Constants.EXTRA_CALL_UUID;
 import static io.wazo.callkeep.Constants.EXTRA_CALL_NUMBER;
+import static io.wazo.callkeep.Constants.EXTRA_CALLER_NUM;
 import static io.wazo.callkeep.Constants.ACTION_END_CALL;
 import static io.wazo.callkeep.Constants.ACTION_ANSWER_CALL;
 import static io.wazo.callkeep.Constants.ACTION_MUTE_CALL;
@@ -171,6 +172,7 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
         extras.putParcelable(TelecomManager.EXTRA_INCOMING_CALL_ADDRESS, uri);
         extras.putString(EXTRA_CALLER_NAME, callerName);
         extras.putString(EXTRA_CALL_UUID, uuid);
+        extras.putString(EXTRA_CALLER_NUM, number);
 
         telecomManager.addNewIncomingCall(handle, extras);
     }
@@ -642,12 +644,12 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
                 case ACTION_CHECK_REACHABILITY:
                     sendEventToJS("RNCallKeepCheckReachability", null);
                     break;
-								case ACTION_SHOW_INCOMING_CALL_UI:
-										args.putString("handle", attributeMap.get(EXTRA_CALL_NUMBER));
-										args.putString("callUUID", attributeMap.get(EXTRA_CALL_UUID));
-										args.putString("name", attributeMap.get(EXTRA_CALLER_NAME));
-										sendEventToJS("RNCallKeepShowIncomingCallUi", args);
-										break;
+                case ACTION_SHOW_INCOMING_CALL_UI:
+                    args.putString("handle", attributeMap.get(EXTRA_CALLER_NUM));
+                    args.putString("callUUID", attributeMap.get(EXTRA_CALL_UUID));
+                    args.putString("name", attributeMap.get(EXTRA_CALLER_NAME));
+                    sendEventToJS("RNCallKeepShowIncomingCallUi", args);
+                    break;
                 case ACTION_WAKE_APP:
                     Intent headlessIntent = new Intent(reactContext, RNCallKeepBackgroundMessagingService.class);
                     headlessIntent.putExtra("callUUID", attributeMap.get(EXTRA_CALL_UUID));
