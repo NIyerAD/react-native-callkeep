@@ -226,7 +226,7 @@ class RNCallKeep {
   };
 
   _alert = async (options, condition) => new Promise((resolve, reject) => {
-    if (!condition) {
+    if (!condition || options.allowSelfManaged) {
       return resolve(false);
     }
 
