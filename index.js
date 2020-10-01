@@ -205,7 +205,7 @@ class RNCallKeep {
   _setupAndroid = async (options) => {
     RNCallKeepModule.setup(options);
 
-    const showAccountAlert = await RNCallKeepModule.checkPhoneAccountPermission(options.additionalPermissions || []);
+    const showAccountAlert = await RNCallKeepModule.checkPhoneAccountPermission(options.additionalPermissions || []) && !options.allowSelfManaged;
     const shouldOpenAccounts = await this._alert(options, showAccountAlert);
 
     if (shouldOpenAccounts) {
