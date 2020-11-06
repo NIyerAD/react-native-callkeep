@@ -70,6 +70,7 @@ import java.util.ResourceBundle;
 import static android.support.v4.app.ActivityCompat.requestPermissions;
 
 import static io.wazo.callkeep.Constants.EXTRA_CALLER_NAME;
+import static io.wazo.callkeep.Constants.EXTRA_CALL_CID;
 import static io.wazo.callkeep.Constants.EXTRA_CALL_UUID;
 import static io.wazo.callkeep.Constants.EXTRA_CALL_NUMBER;
 import static io.wazo.callkeep.Constants.ACTION_END_CALL;
@@ -103,6 +104,7 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
     private boolean isReceiverRegistered = false;
     private VoiceBroadcastReceiver voiceBroadcastReceiver;
     private ReadableMap _settings;
+    private ReadableMap _launchParams;
 
     public RNCallKeepModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -148,22 +150,34 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void displayIncomingCall(String uuid, String number, String callerName) {
-        if (!isConnectionServiceAvailable() || !hasPhoneAccount()) {
-            return;
-        }
+	public void displayIncomingCall(String uuid, String number, String callerName, String cid) {
+		if (!isConnectionServiceAvailable() || !hasPhoneAccount()) {
+			return;
+		}
 
-        Log.d(TAG, "displayIncomingCall number: " + number + ", callerName: " + callerName);
+		Log.d(TAG, "displayIncomingCall number: " + number + ", callerName: " + callerName + " uuid: " + uuid);
+		Log.d(TAG, "cid" + cid);
 
-        Bundle extras = new Bundle();
-        Uri uri = Uri.fromParts(PhoneAccount.SCHEME_TEL, number, null);
+		Bundle extras = new Bundle();
+		Uri uri = Uri.fromParts(PhoneAccount.SCHEME_TEL, number, null);
 
-        extras.putParcelable(TelecomManager.EXTRA_INCOMING_CALL_ADDRESS, uri);
-        extras.putString(EXTRA_CALLER_NAME, callerName);
-        extras.putString(EXTRA_CALL_UUID, uuid);
+		extras.putParcelable(TelecomManager.EXTRA_INCOMING_CALL_ADDRESS, uri);
+		extras.putString(EXTRA_CALLER_NAME, callerName);
+		extras.putString(EXTRA_CALL_NUMBER, number);
+		extras.putString(EXTRA_CALL_UUID, uuid);
+		extras.putString(EXTRA_CALL_CID, cid);
 
-        telecomManager.addNewIncomingCall(handle, extras);
-    }
+		WritableMap callArgs = new Arguments().createMap();
+		callArgs.putString("callUUID", uuid);
+		callArgs.putString("handle", number);
+		callArgs.putString("localizedCallerName", callerName);
+		callArgs.putString("cid", cid);
+
+		sendEventToJS("RNCallKeepDidDisplayIncomingCall", callArgs);
+
+		telecomManager.addNewIncomingCall(handle, extras);
+	}
+
 
     @ReactMethod
     public void answerIncomingCall(String uuid) {
@@ -461,6 +475,35 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
         }
     }
 
+    // FOR USE WITH ANDROID. Sends the parameters necessary to make a call i.e call uuid
+	@ReactMethod
+	public void sendLaunchParameters(ReadableMap params) {
+		this._launchParams = params;
+	}
+
+	// FOR USE WITH ANDROID. Gets the parameters required to make a call once the app has loaded.
+	@ReactMethod
+	public ReadableMap getLaunchParameters() {
+		ReadableMap launchParams = this._launchParams;
+		WritableMap launchArgs = Arguments.createMap();
+		if (launchParams != null) {
+			String callUUID = launchParams.getString("callUUID");
+			String number = launchParams.getString("number");
+			String contactName = launchParams.getString("contactName");
+			Boolean isHeadless = launchParams.getBoolean("isHeadless");
+
+			launchArgs.putString("callUUID", callUUID);
+			launchArgs.putString("number", number);
+			launchArgs.putString("name", contactName);
+			launchArgs.putBoolean("isHeadless", isHeadless);
+
+			sendEventToJS("RNCallKeepDidReceiveParameters", launchArgs);
+			this._launchParams = null;
+		}
+
+		return launchParams;
+	}
+
     private void initializeTelecomManager() {
         Context context = this.getAppContext();
         ComponentName cName = new ComponentName(context, VoiceConnectionService.class);
@@ -507,6 +550,11 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
 
     private Boolean hasPermissions() {
         Activity currentActivity = this.getCurrentActivity();
+
+        if (currentActivity == null) {
+			Log.d(TAG, "activity doesn't exist");
+			return false;
+		}
 
         boolean hasPermissions = true;
         for (String permission : permissions) {
@@ -572,6 +620,9 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
                     break;
                 case ACTION_ANSWER_CALL:
                     args.putString("callUUID", attributeMap.get(EXTRA_CALL_UUID));
+                    args.putString("handle", attributeMap.get(EXTRA_CALL_NUMBER));
+					args.putString("callUUID", attributeMap.get(EXTRA_CALL_UUID));
+					args.putString("cid", attributeMap.get(EXTRA_CALL_CID));
                     sendEventToJS("RNCallKeepPerformAnswerCallAction", args);
                     break;
                 case ACTION_HOLD_CALL:

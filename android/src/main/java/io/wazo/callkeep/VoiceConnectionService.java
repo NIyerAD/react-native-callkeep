@@ -26,8 +26,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.speech.tts.Voice;
-import android.support.annotation.Nullable;
-import android.support.v4.content.LocalBroadcastManager;
+import androidx.annotation.Nullable;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.telecom.CallAudioState;
 import android.telecom.Connection;
 import android.telecom.ConnectionRequest;
@@ -226,12 +226,12 @@ public class VoiceConnectionService extends ConnectionService {
         final VoiceConnectionService instance = this;
         sendCallRequestToActivity(ACTION_CHECK_REACHABILITY, null);
 
-        new android.os.Handler().postDelayed(
-            new Runnable() {
-                public void run() {
-                    instance.wakeUpAfterReachabilityTimeout(instance.currentConnectionRequest);
-                }
-            }, 2000);
+//        new android.os.Handler().postDelayed(
+//            new Runnable() {
+//                public void run() {
+//                    instance.wakeUpAfterReachabilityTimeout(instance.currentConnectionRequest);
+//                }
+//            }, 2000);
     }
 
     private Boolean canMakeOutgoingCall() {
@@ -242,6 +242,7 @@ public class VoiceConnectionService extends ConnectionService {
         Bundle extras = request.getExtras();
         HashMap<String, String> extrasMap = this.bundleToMap(extras);
         extrasMap.put(EXTRA_CALL_NUMBER, request.getAddress().toString());
+
         VoiceConnection connection = new VoiceConnection(this, extrasMap);
         connection.setConnectionCapabilities(Connection.CAPABILITY_MUTE | Connection.CAPABILITY_SUPPORT_HOLD);
         connection.setInitializing();

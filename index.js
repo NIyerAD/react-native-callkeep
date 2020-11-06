@@ -255,6 +255,22 @@ class RNCallKeep {
     NativeModules.RNCallKeep.backToForeground();
   }
 
+  sendLaunchParameters = (params) => {
+    if (isIOS) {
+      return;
+    }
+
+    NativeModules.RNCallKeep.sendLaunchParameters(params);
+  }
+
+  getLaunchParameters() {
+    if (isIOS) {
+      return;
+    }
+
+    NativeModules.RNCallKeep.getLaunchParameters();
+  }
+
 }
 
 export default new RNCallKeep();
