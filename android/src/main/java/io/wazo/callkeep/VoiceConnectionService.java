@@ -274,6 +274,12 @@ public class VoiceConnectionService extends ConnectionService {
         connection.setExtras(extras);
         currentConnections.put(extras.getString(EXTRA_CALL_UUID), connection);
 
+        TelecomManager telecomManager = (TelecomManager) this.getApplicationContext().getSystemService(Context.TELECOM_SERVICE);
+        PhoneAccount phoneAccount = telecomManager.getPhoneAccount(request.getAccountHandle());
+        if ((phoneAccount.getCapabilities() & PhoneAccount.CAPABILITY_SELF_MANAGED) != 0) {
+            connection.setConnectionProperties(Connection.PROPERTY_SELF_MANAGED);
+        }
+
         // Get other connections for conferencing
         Map<String, VoiceConnection> otherConnections = new HashMap<>();
         for (Map.Entry<String, VoiceConnection> entry : currentConnections.entrySet()) {
