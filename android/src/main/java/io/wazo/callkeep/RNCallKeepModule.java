@@ -66,10 +66,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 import static androidx.core.app.ActivityCompat.requestPermissions;
 
 import static io.wazo.callkeep.Constants.EXTRA_CALLER_NAME;
+import static io.wazo.callkeep.Constants.EXTRA_CALL_STATE;
 import static io.wazo.callkeep.Constants.EXTRA_CALL_UUID;
 import static io.wazo.callkeep.Constants.EXTRA_CALL_NUMBER;
 import static io.wazo.callkeep.Constants.EXTRA_CALLER_NUM;
@@ -107,11 +109,15 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
     private boolean isReceiverRegistered = false;
     private VoiceBroadcastReceiver voiceBroadcastReceiver;
     private ReadableMap _settings;
+    private HashMap _preEvents;
+    private boolean available = false;
+    private boolean headless = false;
 
     public RNCallKeepModule(ReactApplicationContext reactContext) {
         super(reactContext);
 
         this.reactContext = reactContext;
+        this._preEvents = new HashMap<String, WritableMap>();
     }
 
     @Override
@@ -161,7 +167,7 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void displayIncomingCall(String uuid, String number, String callerName, String cid) {
+    public void displayIncomingCall(String uuid, String number, String callerName, String cid, String callState) {
         if (!isConnectionServiceAvailable() || !hasPhoneAccount()) {
             return;
         }
@@ -176,6 +182,7 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
         extras.putString(EXTRA_CALL_UUID, uuid);
         extras.putString(EXTRA_CALLER_NUM, number);
         extras.putString(EXTRA_CALL_CID, cid);
+        extras.putString(EXTRA_CALL_STATE, callState);
 
         telecomManager.addNewIncomingCall(handle, extras);
     }
@@ -399,6 +406,16 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void setAvailable(Boolean active) {
         VoiceConnectionService.setAvailable(active);
+
+        available = active;
+				if(active) {
+					Set<String> keys = this._preEvents.keySet();
+					for(String key: keys){
+						this.reactContext.getJSModule(RCTDeviceEventEmitter.class).emit(key, this._preEvents.get(key));
+					}
+
+					this._preEvents.clear();
+				}
     }
 
     @ReactMethod
@@ -534,6 +551,11 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
     }
 
     private void sendEventToJS(String eventName, @Nullable WritableMap params) {
+        if(!available) {
+            this._preEvents.put(eventName, params);
+            return;
+        }
+        
         this.reactContext.getJSModule(RCTDeviceEventEmitter.class).emit(eventName, params);
     }
 
@@ -665,6 +687,7 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
                     args.putString("callUUID", attributeMap.get(EXTRA_CALL_UUID));
                     args.putString("name", attributeMap.get(EXTRA_CALLER_NAME));
                     args.putString("cid", attributeMap.get(EXTRA_CALL_CID));
+                    args.putString("callState", attributeMap.get(EXTRA_CALL_STATE));
                     sendEventToJS("RNCallKeepShowIncomingCallUi", args);
                     break;
                 case ACTION_WAKE_APP:

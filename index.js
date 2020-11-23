@@ -77,9 +77,9 @@ class RNCallKeep {
     return;
   };
 
-  displayIncomingCall = (uuid, handle, localizedCallerName = '', cid, handleType = 'number', hasVideo = false) => {
+  displayIncomingCall = (uuid, handle, localizedCallerName = '', cid, callState, handleType = 'number', hasVideo = false) => {
     if (!isIOS) {
-      RNCallKeepModule.displayIncomingCall(uuid, handle, localizedCallerName, cid);
+      RNCallKeepModule.displayIncomingCall(uuid, handle, localizedCallerName, cid, callState);
       return;
     }
 

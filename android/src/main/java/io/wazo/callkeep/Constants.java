@@ -20,4 +20,5 @@ public class Constants {
     public static final String EXTRA_CALL_UUID = "EXTRA_CALL_UUID";
     public static final String EXTRA_CALLER_NAME = "EXTRA_CALLER_NAME";
     public static final String EXTRA_CALL_CID = "EXTRA_CALL_CID";
+    public static final String EXTRA_CALL_STATE = "EXTRA_CALL_STATE";
 }

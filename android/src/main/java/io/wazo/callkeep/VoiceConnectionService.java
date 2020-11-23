@@ -235,13 +235,6 @@ public class VoiceConnectionService extends ConnectionService {
 
         final VoiceConnectionService instance = this;
         sendCallRequestToActivity(ACTION_CHECK_REACHABILITY, null);
-
-        new android.os.Handler().postDelayed(
-            new Runnable() {
-                public void run() {
-                    instance.wakeUpAfterReachabilityTimeout(instance.currentConnectionRequest);
-                }
-            }, 2000);
     }
 
     private Boolean canMakeOutgoingCall() {
