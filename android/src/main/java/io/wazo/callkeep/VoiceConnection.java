@@ -46,7 +46,6 @@ import static io.wazo.callkeep.Constants.ACTION_MUTE_CALL;
 import static io.wazo.callkeep.Constants.ACTION_SHOW_INCOMING_CALL;
 import static io.wazo.callkeep.Constants.ACTION_UNHOLD_CALL;
 import static io.wazo.callkeep.Constants.ACTION_UNMUTE_CALL;
-import static io.wazo.callkeep.Constants.ACTION_SHOW_INCOMING_CALL_UI;
 import static io.wazo.callkeep.Constants.EXTRA_CALLER_NAME;
 import static io.wazo.callkeep.Constants.EXTRA_CALL_NUMBER;
 import static io.wazo.callkeep.Constants.EXTRA_CALL_UUID;
@@ -204,12 +203,6 @@ public class VoiceConnection extends Connection {
             Log.e(TAG, "Handle map error", exception);
         }
         destroy();
-    }
-
-    @Override
-    public void onShowIncomingCallUi() {
-            Log.d(TAG, "onShowIncomingCallUi()");
-            sendCallRequestToActivity(ACTION_SHOW_INCOMING_CALL_UI, handle);
     }
 
     /*
