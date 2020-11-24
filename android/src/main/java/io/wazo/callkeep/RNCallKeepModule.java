@@ -88,7 +88,6 @@ import static io.wazo.callkeep.Constants.ACTION_ONGOING_CALL;
 import static io.wazo.callkeep.Constants.ACTION_AUDIO_SESSION;
 import static io.wazo.callkeep.Constants.ACTION_CHECK_REACHABILITY;
 import static io.wazo.callkeep.Constants.ACTION_WAKE_APP;
-import static io.wazo.callkeep.Constants.ACTION_SHOW_INCOMING_CALL_UI;
 
 // @see https://github.com/kbagchiGWC/voice-quickstart-android/blob/9a2aff7fbe0d0a5ae9457b48e9ad408740dfb968/exampleConnectionService/src/main/java/com/twilio/voice/examples/connectionservice/VoiceConnectionServiceActivity.java
 public class RNCallKeepModule extends ReactContextBaseJavaModule {
@@ -603,7 +602,6 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
             intentFilter.addAction(ACTION_ONGOING_CALL);
             intentFilter.addAction(ACTION_AUDIO_SESSION);
             intentFilter.addAction(ACTION_CHECK_REACHABILITY);
-            intentFilter.addAction(ACTION_SHOW_INCOMING_CALL_UI);
             LocalBroadcastManager.getInstance(this.reactContext).registerReceiver(voiceBroadcastReceiver, intentFilter);
             isReceiverRegistered = true;
         }
@@ -638,7 +636,11 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
                     sendEventToJS("RNCallKeepPerformEndCallAction", args);
                     break;
                 case ACTION_SHOW_INCOMING_CALL:
+                    args.putString("handle", attributeMap.get(EXTRA_CALLER_NUM));
                     args.putString("callUUID", attributeMap.get(EXTRA_CALL_UUID));
+                    args.putString("name", attributeMap.get(EXTRA_CALLER_NAME));
+                    args.putString("cid", attributeMap.get(EXTRA_CALL_CID));
+                    args.putString("callState", attributeMap.get(EXTRA_CALL_STATE));
                     sendEventToJS("RNCallKeepPerformShowIncomingCallAction", args);
                     break;
                 case ACTION_ANSWER_CALL:
@@ -681,14 +683,6 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
                     break;
                 case ACTION_CHECK_REACHABILITY:
                     sendEventToJS("RNCallKeepCheckReachability", null);
-                    break;
-                case ACTION_SHOW_INCOMING_CALL_UI:
-                    args.putString("handle", attributeMap.get(EXTRA_CALLER_NUM));
-                    args.putString("callUUID", attributeMap.get(EXTRA_CALL_UUID));
-                    args.putString("name", attributeMap.get(EXTRA_CALLER_NAME));
-                    args.putString("cid", attributeMap.get(EXTRA_CALL_CID));
-                    args.putString("callState", attributeMap.get(EXTRA_CALL_STATE));
-                    sendEventToJS("RNCallKeepShowIncomingCallUi", args);
                     break;
                 case ACTION_WAKE_APP:
                     Intent headlessIntent = new Intent(reactContext, RNCallKeepBackgroundMessagingService.class);
