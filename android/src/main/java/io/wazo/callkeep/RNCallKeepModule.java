@@ -114,6 +114,7 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
     private VoiceBroadcastReceiver voiceBroadcastReceiver;
     private ReadableMap _settings;
     private HashMap _preEvents;
+    private boolean available = false;
     private boolean headless = false;
 
     public RNCallKeepModule(ReactApplicationContext reactContext) {
@@ -522,6 +523,7 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
     public void setAvailable(Boolean active) {
         VoiceConnectionService.setAvailable(active);
         
+        available = active;
         if(active) {
             Set<String> keys = this._preEvents.keySet();
             for(String key: keys){
