@@ -75,7 +75,7 @@ class RNCallKeep {
     handle,
     localizedCallerName = '',
     cid,
-    callState
+    callState,
     handleType = 'number',
     hasVideo = false,
     options = null
