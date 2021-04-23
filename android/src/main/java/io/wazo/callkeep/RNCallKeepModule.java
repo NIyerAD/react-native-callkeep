@@ -111,6 +111,8 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
     private HashMap _preEvents;
     private boolean available = false;
     private boolean headless = false;
+    private String deadUUID;
+    public static Boolean callEndedFromDead = false;
 
     public RNCallKeepModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -225,6 +227,16 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void endCall(String uuid) {
         Log.d(TAG, "endCall called");
+        // If a call is cancelled from dead we need to send the end call event
+        if (!available) {
+        	Log.d(TAG, "end call - service unavailable");
+            callEndedFromDead = true;
+            deadUUID = uuid;
+            WritableMap params = Arguments.createMap();
+            params.putString("callUUID", uuid);
+            sendEventToJS("RNCallKeepPerformEndCallAction", params);
+        }
+
         if (!isConnectionServiceAvailable() || !hasPhoneAccount()) {
             return;
         }
@@ -552,10 +564,17 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
     private void sendEventToJS(String eventName, @Nullable WritableMap params) {
         if(!available) {
             this._preEvents.put(eventName, params);
+            if (callEndedFromDead) {
+                // If the call was ended/cancelled from a killed state, we need to end the call connection
+                Connection conn = VoiceConnectionService.getConnection(deadUUID);
+                conn.onDisconnect();
+            }
             return;
         }
         
         this.reactContext.getJSModule(RCTDeviceEventEmitter.class).emit(eventName, params);
+        deadUUID = null;
+        callEndedFromDead = false;
     }
 
     private String getApplicationName(Context appContext) {
