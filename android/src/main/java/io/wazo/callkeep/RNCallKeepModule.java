@@ -113,15 +113,11 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
     private boolean isReceiverRegistered = false;
     private VoiceBroadcastReceiver voiceBroadcastReceiver;
     private ReadableMap _settings;
-    private HashMap _preEvents;
-    private boolean available = false;
-    private boolean headless = false;
 
     public RNCallKeepModule(ReactApplicationContext reactContext) {
         super(reactContext);
 
         this.reactContext = reactContext;
-        this._preEvents = new HashMap<String, WritableMap>();
     }
     
     private boolean isSelfManaged() {
@@ -522,26 +518,6 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void setAvailable(Boolean active) {
         VoiceConnectionService.setAvailable(active);
-        
-        available = active;
-        if(active) {
-            Set<String> keys = this._preEvents.keySet();
-            for(String key: keys){
-                this.reactContext.getJSModule(RCTDeviceEventEmitter.class).emit(key, this._preEvents.get(key));
-            }
-
-            this._preEvents.clear();
-        }
-    }
-
-    @ReactMethod
-    public void setForegroundServiceSettings(ReadableMap settings) {
-        VoiceConnectionService.setSettings(settings);
-    }
-
-    @ReactMethod
-    public void canMakeMultipleCalls(Boolean allow) {
-        VoiceConnectionService.setCanMakeMultipleCalls(allow);
     }
 
     @ReactMethod
@@ -667,12 +643,7 @@ public class RNCallKeepModule extends ReactContextBaseJavaModule {
         telecomManager.registerPhoneAccount(account);
     }
 
-    private void sendEventToJS(String eventName, @Nullable WritableMap params) {
-        if(!available) {
-            this._preEvents.put(eventName, params);
-            return;
-        }
-        
+    private void sendEventToJS(String eventName, @Nullable WritableMap params) {       
         this.reactContext.getJSModule(RCTDeviceEventEmitter.class).emit(eventName, params);
     }
 
